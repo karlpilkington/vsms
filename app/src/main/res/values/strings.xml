@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">VSMS</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_show_message">ShowMessageActivity</string>
+    <string name="title_activity_conversation">[Conversation]</string>
+    <string name="title_activity_conversation_list">Conversations</string>
+    <string name="send">Send</string>
+
+</resources>
