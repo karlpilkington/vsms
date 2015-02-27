@@ -10,7 +10,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Locale;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -93,7 +95,7 @@ public class GetSms extends VoipMsRequest<GetSms.GetSmsResponse> {
             long dayDelta = TimeUnit.DAYS.convert(delta, TimeUnit.MILLISECONDS);
 
             // If it's been more than 90 days, cap to 90 days
-            if (dayDelta >= 90) {
+            if (dayDelta >= MAX_AGE_DAYS) {
                 from = Calendar.getInstance();
                 from.add(Calendar.DATE, -MAX_AGE_DAYS);
             }
@@ -101,6 +103,12 @@ public class GetSms extends VoipMsRequest<GetSms.GetSmsResponse> {
 
         this.from = String.format(Locale.CANADA, "%s-%s-%s", from.get(Calendar.YEAR), from.get(Calendar.MONTH) + 1,from.get(Calendar.DAY_OF_MONTH));
         this.to = String.format(Locale.CANADA, "%s-%s-%s", to.get(Calendar.YEAR), to.get(Calendar.MONTH) + 1,to.get(Calendar.DAY_OF_MONTH));
+
+        double offset = (double)from.getTimeZone().getRawOffset();
+        // Msec to hours
+        offset /= 3600000.0;
+
+        this.timezone = Double.toString(offset);
     }
 
 }

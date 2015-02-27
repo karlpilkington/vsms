@@ -15,8 +15,12 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.CursorAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -29,7 +33,8 @@ import java.io.IOException;
 
 public class ConversationListActivity extends ListActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    private SimpleCursorAdapter adapter;
+//    private SimpleCursorAdapter adapter;
+    private CursorAdapter adapter;
 
     public static final String EXTRA_MESSAGE = "message";
     public static final String PROPERTY_REG_ID = "registration_id";
@@ -159,7 +164,6 @@ public class ConversationListActivity extends ListActivity implements LoaderMana
 
         checkPlayServices();
 
-        //TODO: This really shouldn't be needed.  Keep until notifications are working
         SmsMessageContentProvider.refresh(this);
     }
 
@@ -222,8 +226,46 @@ public class ConversationListActivity extends ListActivity implements LoaderMana
         int[] to = new int[] { R.id.name_entry, R.id.message_entry, R.id.id_entry };
 
         getLoaderManager().initLoader(0, null, this);
-        adapter = new SimpleCursorAdapter(this, R.layout.list_conversation_entry, null, from,
-                to, 0);
+//        adapter = new SimpleCursorAdapter(this, R.layout.list_conversation_entry, null, from,
+//                to, 0);
+        adapter = new SimpleCursorAdapter(this, R.layout.list_conversation_entry, null, from,to, 0) {
+            @Override
+            public void bindView(View view, final Context context, final Cursor cursor) {
+                super.bindView(view, context, cursor);
+
+                final ViewBinder binder = this.getViewBinder();
+
+                final View v = view.findViewById(R.id.name_entry);
+
+                final int ind = cursor.getColumnIndex(SmsMessageTable.COLUMN_CONTACT);
+
+                if (v != null) {
+                    boolean bound = false;
+                    if (binder != null) {
+                        bound = binder.setViewValue(v, cursor, ind);
+                    }
+
+                    if (!bound) {
+                        new AsyncTask<String, Void, Integer>() {
+                            @Override
+                            protected Integer doInBackground(String... params) {
+                                String contact = cursor.getString(ind);
+                                contact = ContactsHelpers.displayNameFromContactNumber(context, contact);
+                                if (contact == null) {
+                                    contact = "";
+                                }
+
+                                setViewText((TextView) v, contact);
+
+                                return 0;
+                            }
+                        }.doInBackground();
+
+
+                    }
+                }
+            }
+        };
 
         setListAdapter(adapter);
     }

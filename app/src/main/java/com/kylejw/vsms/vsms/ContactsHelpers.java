@@ -18,13 +18,15 @@ public class ContactsHelpers {
         }
 
         final String[] projection = new String[] { ContactsContract.Contacts.DISPLAY_NAME };
-
+//        Uri lkup = Uri.withAppendedPath(ContactsContract.CommonDataKinds.Phone.CONTENT_FILTER_URI, Uri.encode(contactNumber));
         Uri lkup = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(contactNumber));
         Cursor idCursor = context.getContentResolver().query(lkup, projection, null, null, null);
 
+        final int index = 0;//idCursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
+
         try {
             while (idCursor.moveToNext()) {
-                return idCursor.getString(idCursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+                return idCursor.getString(index);
             }
         } finally {
             if (null != idCursor)

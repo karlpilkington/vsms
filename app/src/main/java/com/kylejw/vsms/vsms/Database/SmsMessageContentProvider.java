@@ -191,7 +191,7 @@ public class SmsMessageContentProvider extends ContentProvider {
         long id = 0;
         switch(uriType) {
             case MESSAGES:
-                id = sqlDB.insert(SmsMessageTable.TABLE_MESSAGES, null, values);
+                id = sqlDB.insertWithOnConflict(SmsMessageTable.TABLE_MESSAGES, null, values, SQLiteDatabase.CONFLICT_REPLACE);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);

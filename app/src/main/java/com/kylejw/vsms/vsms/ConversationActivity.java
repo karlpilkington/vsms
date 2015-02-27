@@ -14,6 +14,7 @@ import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.SimpleCursorAdapter;
@@ -97,9 +98,9 @@ public class ConversationActivity extends ListActivity implements LoaderManager.
         // Fields from the database (projection)
         // Must include the _id column for the adapter to work
 
-        String[] from = new String[] { SmsMessageTable.COLUMN_CONTACT, SmsMessageTable.COLUMN_MESSAGE, SmsMessageTable.COLUMN_INTERNAL_ID };
+        String[] from = new String[]{SmsMessageTable.COLUMN_CONTACT, SmsMessageTable.COLUMN_MESSAGE, SmsMessageTable.COLUMN_INTERNAL_ID};
         // Fields on the UI to which we map
-        int[] to = new int[] { R.id.name_entry, R.id.message_entry, R.id.id_entry };
+        int[] to = new int[]{R.id.name_entry, R.id.message_entry, R.id.id_entry};
 
         getLoaderManager().initLoader(0, null, this);
         adapter = new SimpleCursorAdapter(this, R.layout.list_conversation_entry, null, from,
@@ -153,6 +154,11 @@ public class ConversationActivity extends ListActivity implements LoaderManager.
                 values.put(SmsMessageTable.COLUMN_DID, did);
                 values.put(SmsMessageTable.COLUMN_DATE, Calendar.getInstance().getTimeInMillis());
                 getContentResolver().insert(SmsMessageContentProvider.CONTENT_URI, values);
+
+                sendMessageText.setText("");
+                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(sendMessageText.getWindowToken(),
+                        InputMethodManager.RESULT_UNCHANGED_SHOWN);
             }
         });
     }
