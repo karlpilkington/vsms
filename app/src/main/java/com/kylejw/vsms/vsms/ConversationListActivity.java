@@ -12,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,6 +31,10 @@ import com.kylejw.vsms.vsms.Database.SmsMessageContentProvider;
 import com.kylejw.vsms.vsms.Database.SmsMessageTable;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ConversationListActivity extends ListActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -45,6 +50,8 @@ public class ConversationListActivity extends ListActivity implements LoaderMana
     private GoogleCloudMessaging gcm;
     private String regid;
     private Context context;
+
+    private ConcurrentHashMap<String, String> contactNameCache = new ConcurrentHashMap<>();
 
     private void checkPlayServices() {
         try {
@@ -164,7 +171,7 @@ public class ConversationListActivity extends ListActivity implements LoaderMana
 
         checkPlayServices();
 
-        SmsMessageContentProvider.refresh(this);
+        //SmsMessageContentProvider.refresh(this);
     }
 
     @Override
@@ -246,21 +253,18 @@ public class ConversationListActivity extends ListActivity implements LoaderMana
                     }
 
                     if (!bound) {
-                        new AsyncTask<String, Void, Integer>() {
-                            @Override
-                            protected Integer doInBackground(String... params) {
-                                String contact = cursor.getString(ind);
-                                contact = ContactsHelpers.displayNameFromContactNumber(context, contact);
-                                if (contact == null) {
-                                    contact = "";
-                                }
 
-                                setViewText((TextView) v, contact);
+                        final String contact = cursor.getString(ind);
 
-                                return 0;
+                        if (contactNameCache.containsKey(contact)) {
+                            setViewText((TextView) v, contactNameCache.get(contact));
+                        } else {
+                            String displayName = ContactsHelpers.displayNameFromContactNumber(context, contact);
+                            if (displayName == null || displayName.isEmpty()) {
+                                displayName = contact;
                             }
-                        }.doInBackground();
-
+                            setViewText((TextView) v, displayName);
+                        }
 
                     }
                 }
@@ -280,9 +284,47 @@ public class ConversationListActivity extends ListActivity implements LoaderMana
     }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+    public void onLoadFinished(Loader<Cursor> loader, final Cursor data) {
         try {
+
+            // Get initial position
+            int initialPosition = data.getPosition();
+
+            data.moveToFirst();
+
+            final int contactColumn = data.getColumnIndex(SmsMessageTable.COLUMN_CONTACT);
+            while(!data.isAfterLast()) {
+                String contactNum = data.getString(contactColumn);
+                if (!contactNameCache.containsKey(contactNum)) {
+                    contactNameCache.put(contactNum, contactNum);
+                }
+                data.moveToNext();
+            }
+
+            // Restore initial position
+            data.moveToPosition(initialPosition);
+
+            final Context context = this;
+
+            // Refresh cache
+            new AsyncTask<Void, Void, Integer>() {
+                @Override
+                protected Integer doInBackground(Void... params) {
+
+                    for (String contactName : contactNameCache.keySet()) {
+                        String displayName = ContactsHelpers.displayNameFromContactNumber(context, contactName);
+
+                        if (displayName == null || displayName.isEmpty()) continue;
+
+                        contactNameCache.replace(contactName, displayName);
+                    }
+
+                    return 0;
+                }
+            }.doInBackground();
+
             adapter.swapCursor(data);
+
         } catch (Exception ex) {
             Toast.makeText(this, ex.toString(), Toast.LENGTH_LONG);
         }
