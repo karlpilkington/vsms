@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
@@ -14,10 +15,13 @@ import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.kylejw.vsms.vsms.Database.SmsMessageContentProvider;
@@ -98,13 +102,31 @@ public class ConversationActivity extends ListActivity implements LoaderManager.
         // Fields from the database (projection)
         // Must include the _id column for the adapter to work
 
-        String[] from = new String[]{SmsMessageTable.COLUMN_CONTACT, SmsMessageTable.COLUMN_MESSAGE, SmsMessageTable.COLUMN_INTERNAL_ID};
+        String[] from = new String[]{SmsMessageTable.COLUMN_CONTACT, SmsMessageTable.COLUMN_MESSAGE, SmsMessageTable.COLUMN_INTERNAL_ID, SmsMessageTable.COLUMN_TYPE};
         // Fields on the UI to which we map
-        int[] to = new int[]{R.id.name_entry, R.id.message_entry, R.id.id_entry};
+        int[] to = new int[]{R.id.name_entry, R.id.message_entry, R.id.id_entry, R.id.none};
 
         getLoaderManager().initLoader(0, null, this);
-        adapter = new SimpleCursorAdapter(this, R.layout.list_conversation_entry, null, from,
-                to, 0);
+//        adapter = new SimpleCursorAdapter(this, R.layout.list_message_entry, null, from,
+//                to, 0);
+
+        adapter = new SimpleCursorAdapter(this, R.layout.list_message_entry, null, from, to, 0) {
+            @Override
+            public void bindView(View view, Context context, Cursor cursor) {
+                super.bindView(view, context, cursor);
+
+                final int ind = cursor.getColumnIndex(SmsMessageTable.COLUMN_TYPE);
+                String type = cursor.getString(ind);
+                SmsMessage.MessageType messageType = SmsMessage.MessageType.valueOf(type);
+
+                if (messageType == SmsMessage.MessageType.RECEIVED) {
+                    view.setBackgroundColor(0x5FB2FA);
+                } else {
+                    view.setBackgroundColor(Color.WHITE);
+                }
+            }
+        };
+
 
         setListAdapter(adapter);
     }
@@ -133,6 +155,10 @@ public class ConversationActivity extends ListActivity implements LoaderManager.
 
     private void sendButtonClicked(View v) {
 
+        final Button sendMessageButton = (Button) findViewById(R.id.send_message_button);
+        sendMessageButton.setEnabled(false);
+        sendMessageText.setEnabled(false);
+
         final String text = sendMessageText.getText().toString();
 
         final Context context = this;
@@ -141,8 +167,11 @@ public class ConversationActivity extends ListActivity implements LoaderManager.
         send.executeAsync(new VoipMsRequest.VoipMsCallback<SendSms.SendSmsResponse>() {
             @Override
             public void onComplete(SendSms.SendSmsResponse sendSmsResponse) {
+                sendMessageText.setEnabled(true);
+
                 if (!sendSmsResponse.isSuccess()) {
                     Toast.makeText(context, "Failed to send SMS: " + sendSmsResponse.getStatus(), Toast.LENGTH_LONG);
+                    sendMessageButton.setEnabled(true);
                     return;
                 }
 
@@ -166,7 +195,7 @@ public class ConversationActivity extends ListActivity implements LoaderManager.
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         try {
-            String[] projection = {SmsMessageTable.COLUMN_INTERNAL_ID, SmsMessageTable.COLUMN_DID, SmsMessageTable.COLUMN_CONTACT, SmsMessageTable.COLUMN_MESSAGE, SmsMessageTable.COLUMN_DATE};
+            String[] projection = {SmsMessageTable.COLUMN_INTERNAL_ID, SmsMessageTable.COLUMN_DID, SmsMessageTable.COLUMN_CONTACT, SmsMessageTable.COLUMN_MESSAGE, SmsMessageTable.COLUMN_DATE, SmsMessageTable.COLUMN_TYPE};
             Uri dbUri = Uri.parse(SmsMessageContentProvider.CONTACT_URI + "/" + contact);
 
             return new CursorLoader(this, dbUri, projection, null, null, SmsMessageTable.COLUMN_DATE + " ASC");

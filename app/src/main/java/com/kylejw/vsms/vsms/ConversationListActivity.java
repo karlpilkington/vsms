@@ -13,6 +13,7 @@ import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.text.format.DateFormat;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,6 +33,7 @@ import com.kylejw.vsms.vsms.Database.SmsMessageTable;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -228,9 +230,9 @@ public class ConversationListActivity extends ListActivity implements LoaderMana
 
         // Fields from the database (projection)
         // Must include the _id column for the adapter to work
-        String[] from = new String[] { SmsMessageTable.COLUMN_CONTACT, SmsMessageTable.COLUMN_MESSAGE, SmsMessageTable.COLUMN_INTERNAL_ID };
+        String[] from = new String[] { SmsMessageTable.COLUMN_CONTACT, SmsMessageTable.COLUMN_MESSAGE, SmsMessageTable.COLUMN_INTERNAL_ID, SmsMessageTable.COLUMN_DATE };
         // Fields on the UI to which we map
-        int[] to = new int[] { R.id.name_entry, R.id.message_entry, R.id.id_entry };
+        int[] to = new int[] { R.id.name_entry, R.id.message_entry, R.id.id_entry, R.id.date_entry };
 
         getLoaderManager().initLoader(0, null, this);
 //        adapter = new SimpleCursorAdapter(this, R.layout.list_conversation_entry, null, from,
@@ -242,19 +244,19 @@ public class ConversationListActivity extends ListActivity implements LoaderMana
 
                 final ViewBinder binder = this.getViewBinder();
 
-                final View v = view.findViewById(R.id.name_entry);
+                View v = view.findViewById(R.id.name_entry);
 
-                final int ind = cursor.getColumnIndex(SmsMessageTable.COLUMN_CONTACT);
+                final int contactIndex = cursor.getColumnIndex(SmsMessageTable.COLUMN_CONTACT);
 
                 if (v != null) {
                     boolean bound = false;
                     if (binder != null) {
-                        bound = binder.setViewValue(v, cursor, ind);
+                        bound = binder.setViewValue(v, cursor, contactIndex);
                     }
 
                     if (!bound) {
 
-                        final String contact = cursor.getString(ind);
+                        final String contact = cursor.getString(contactIndex);
 
                         if (contactNameCache.containsKey(contact)) {
                             setViewText((TextView) v, contactNameCache.get(contact));
@@ -265,6 +267,24 @@ public class ConversationListActivity extends ListActivity implements LoaderMana
                             }
                             setViewText((TextView) v, displayName);
                         }
+
+                    }
+                }
+
+                final int dateIndex = cursor.getColumnIndex(SmsMessageTable.COLUMN_DATE);
+                v = view.findViewById(R.id.date_entry);
+                if (null != v) {
+                    boolean bound = false;
+                    if (binder != null) {
+                        bound = binder.setViewValue(v, cursor, dateIndex);
+                    }
+
+                    if (!bound) {
+
+                        final long date = cursor.getLong(dateIndex);
+                        String dateString= DateFormat.format("MM/dd/yyyy", new Date(date)).toString();
+
+                        setViewText((TextView) v, dateString);
 
                     }
                 }
