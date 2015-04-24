@@ -117,7 +117,12 @@ public class ConversationActivity extends ListActivity implements LoaderManager.
 
                 final int ind = cursor.getColumnIndex(SmsMessageTable.COLUMN_TYPE);
                 String type = cursor.getString(ind);
-                SmsMessage.MessageType messageType = SmsMessage.MessageType.valueOf(type);
+                SmsMessage.MessageType messageType;
+                try {
+                    messageType = SmsMessage.MessageType.valueOf(type);
+                } catch (Exception ex) {
+                    messageType = SmsMessage.MessageType.values()[cursor.getInt(ind)];
+                }
 
                 if (messageType == SmsMessage.MessageType.RECEIVED) {
                     view.setBackgroundColor(0x5FB2FA);
