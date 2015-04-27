@@ -2,6 +2,7 @@ package com.kylejw.vsms.vsms.VoipMsApi.DataModel;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.Html;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -126,7 +127,7 @@ public class SmsMessage {
 
         if (jo.has("message")) {
             try {
-                msg.setMessage(jo.getString("message"));
+                msg.setMessage(Html.fromHtml(jo.getString("message")).toString());
             } catch (JSONException ex) {
             }
         }

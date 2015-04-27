@@ -8,5 +8,9 @@
     <string name="title_activity_conversation">[Conversation]</string>
     <string name="title_activity_conversation_list">Conversations</string>
     <string name="send">Send</string>
+    <string name="test_contact_name">Sam Jackson</string>
+    <string name="test_message_text">Normally, both your asses would be dead as fucking fried chicken, but you happen to pull this shit while I\'m in a transitional period so I don\'t wanna kill you, I wanna help you. But I can\'t give you this case, it don\'t belong to me. Besides, I\'ve already been through too much shit this morning over this case to hand it over to your dumb ass.</string>
+    <string name="test_message_date">12/24/1999</string>
+    <string name="test_message_id">9923</string>
 
 </resources>

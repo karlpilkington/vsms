@@ -3,6 +3,7 @@ package com.kylejw.vsms.vsms;
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.os.Vibrator;
 import android.support.v4.app.NotificationCompat;
 import android.app.PendingIntent;
 import android.content.Intent;
@@ -103,5 +104,9 @@ public class GcmIntentService extends IntentService {
         mBuilder.setContentIntent(contentIntent);
         mBuilder.setAutoCancel(true);
         mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
+
+        Context baseContext = getBaseContext();
+        Vibrator v = (Vibrator) baseContext.getSystemService(Context.VIBRATOR_SERVICE);
+        v.vibrate(333);
     }
 }
